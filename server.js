@@ -60,24 +60,20 @@ app.use(express.static("public"));
 // GET /students
 app.get("/students", async (req, res) => {
   try {
-    // check if user input a course parameter i.e /students?course=7
-    if (req.query.course) {
-      const course = parseInt(req.query.course);
-      // check if user course input is a number between 1 and 7
-      if (isNaN(course) || course < 1 || course > 7) {
-        res.render("students", { message: "Invalid course number" });
+
+      if (req.query.course) {
+          const course = parseInt(req.query.course);
+          if (isNaN(course) || course < 1 || course > 7) {
+              throw new Error('Invalid course number');
+          }
+          const students = await cd.getStudentsByCourse(course);
+          res.render("students", { students });
+      } else {
+          const students = await cd.getAllStudents();
+          res.render("students", { students });
       }
-      // filter students by course using our getStudentsByCourse(c) funciton
-      const filteredStudents = await cd.getStudentsByCourse(course);
-      res.render("students", {filteredStudents});
-    } else {
-      // else get all the data using getAllStudents() funciton
-      const allStudentsData = await cd.getAllStudents();
-      res.render("students", allStudentsData);
-    }
-  } catch (error) {
-    // show 'query returned 0 results' message, in case of no data collected
-    res.render("students", { message: "query returned 0 results" });
+  } catch (err) {
+      res.render("students", { message: 'no results' });
   }
 });
 
@@ -97,12 +93,10 @@ app.get("/tas", async (req, res) => {
 // GET /courses
 app.get("/courses", async (req, res) => {
   try {
-    // get and show all courses using our getCourses() function
-    const courses = await cd.getCourses();
-    res.render("courses", courses);
-  } catch (error) {
-    // show 'no result' message, in case of no data collected
-    res.status(500).render("courses", { message: "no results" });
+      const courses = await cd.getCourses();
+      res.render("courses", { courses });
+  } catch (err) {
+      res.render("courses", { message: "no results" });
   }
 });
 
