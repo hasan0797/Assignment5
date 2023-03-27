@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>ABOUT</title>
+    <title>HOME</title>
     <meta charset="UTF-8" />
     <link
       rel="stylesheet"
@@ -9,7 +9,7 @@
       integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
       crossorigin="anonymous"
     />
-    <link rel="stylesheet" href="/theme.css" />
+    <link rel="stylesheet" href="/css/theme.css" />
   </head>
 
   <body>
@@ -28,51 +28,24 @@
       </button>
 
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-          <li class="nav-item active">
-            <a class="nav-link" href="/about">About</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/htmlDemo">Html Demo</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/students/add">Add Student</a>
-          </li>
-        </ul>
+       <ul class="navbar-nav mr-auto">
+                {{#navLink "/"}}Home{{/navLink}}
+                {{#navLink "/about"}}About{{/navLink}}
+                {{#navLink "/htmlDemo"}}Html Demo{{/navLink}}
+                {{#navLink "/students/add"}}Add Student{{/navLink}}
+            </ul>
+
         <ul class="navbar-nav ml-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="/students">Students</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/tas">Teaching Assistants</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/courses">Courses</a>
-          </li>
-        </ul>
+                {{#navLink "/students"}}Students{{/navLink}}
+                {{#navLink "/courses"}}Courses{{/navLink}}
+            </ul>
       </div>
     </nav>
 
     <div class="container">
-      <div class="row">
-        <main class="col-md-12">
           <!-- Start your code here -->
-          <h2>
-            Welcome, here you can find information about the Author of this
-            website
-          </h2>
-          <div class="about-box">
-            <h4>My information</h4>
-            <p>
-              Student name: Mahbubul Hasan<br />
-              Student id: 161258215<br />
-              Program: Business IT
-            </p>
-          </div>
+          {{{body}}}
           <!-- End your code here  -->
-        </main>
-      </div>
     </div>
 
     <script

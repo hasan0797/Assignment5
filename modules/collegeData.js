@@ -74,6 +74,17 @@ module.exports.getCourses = function () {
   });
 };
 
+module.exports.getCourseById = function (Cid) {
+  return new Promise((resolve, reject) => {
+      const course = dataCollection.courses.find(c => c.courseId === Cid);
+      if (course) {
+          resolve(course);
+      } else {
+          reject('query returned 0 results');
+      }
+  });
+};
+
 module.exports.getStudentByNum = function (num) {
   return new Promise(function (resolve, reject) {
     var foundStudent = null;
@@ -90,6 +101,21 @@ module.exports.getStudentByNum = function (num) {
     }
 
     resolve(foundStudent);
+  });
+};
+
+
+module.exports.updateStudent = function (studentData) {
+  return new Promise((resolve, reject) => {
+      const student = dataCollection.students.find(student => student.studentNum === studentData.studentNum);
+      if (studentData.studentNum < 0) {
+          reject(new Error(`Could not find this student ${studentData.studentNum}`));
+          return;
+      }
+      const newStudent = Object.assign({}, student, studentData);
+      newStudent.isTA = studentData.isTA || false;
+      dataCollection.students[studentData.studentNum - 1] = newStudent;
+      resolve();
   });
 };
 

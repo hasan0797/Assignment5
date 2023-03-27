@@ -12,6 +12,46 @@ var express = require("express");
 var app = express();
 var path = require("path");
 var cd = require("./modules/collegeData.js");
+var expressHBS = require('express-handlebars');
+
+
+// engine
+app.engine('hbs', expressHBS.engine({
+  extname: '.hbs',
+  defaultLayout: 'main',
+  helpers: {
+      navLink: function (url, options) {
+          return '<li' +
+              ((url == app.locals.activeRoute) ? ' class="nav-item active" ' : ' class="nav-item" ') +
+              '><a class="nav-link" href="' + url + '">' + options.fn(this) + '</a></li>';
+      },
+      equal: function (lvalue, rvalue, options) {
+          if (arguments.length < 3)
+              throw new Error("Handlebars Helper equal needs 2 parameters");
+          if (lvalue != rvalue) {
+              return options.inverse(this);
+          } else {
+              return options.fn(this);
+          }
+      }
+
+
+  }
+}));
+
+
+
+// specify the 'view engine' -> hbs
+app.set('view engine', 'hbs');
+
+
+// navigation bar 
+app.use(function (req, res, next) {
+  let route = req.path.substring(1);
+  app.locals.activeRoute = "/" + (isNaN(route.split('/')[1]) ? route.replace(/\/(?!.*)/, "") : route.replace(/\/(.*)/, ""));
+  next();
+});
+
 
 // Add the middleware
 app.use(express.urlencoded({ extended: true }));
@@ -25,21 +65,22 @@ app.get("/students", async (req, res) => {
       const course = parseInt(req.query.course);
       // check if user course input is a number between 1 and 7
       if (isNaN(course) || course < 1 || course > 7) {
-        res.json({ message: "Invalid course number" });
+        res.render("students", { message: "Invalid course number" });
       }
       // filter students by course using our getStudentsByCourse(c) funciton
       const filteredStudents = await cd.getStudentsByCourse(course);
-      res.json(filteredStudents);
+      res.render("students", {filteredStudents});
     } else {
       // else get all the data using getAllStudents() funciton
       const allStudentsData = await cd.getAllStudents();
-      res.json(allStudentsData);
+      res.render("students", allStudentsData);
     }
   } catch (error) {
     // show 'query returned 0 results' message, in case of no data collected
-    res.json({ message: "query returned 0 results" });
+    res.render("students", { message: "query returned 0 results" });
   }
 });
+
 
 // GET /tas
 app.get("/tas", async (req, res) => {
@@ -58,48 +99,60 @@ app.get("/courses", async (req, res) => {
   try {
     // get and show all courses using our getCourses() function
     const courses = await cd.getCourses();
-    res.json(courses);
+    res.render("courses", courses);
   } catch (error) {
     // show 'no result' message, in case of no data collected
-    res.status(500).json({ message: "no results" });
+    res.status(500).render("courses", { message: "no results" });
+  }
+});
+
+// GET /course/var
+app.get("/course/:Cid", async (req, res) => {
+  try {
+      const num = parseInt(req.params.Cid);
+      const course = await cd.getCourseById(num);
+      res.render("course", { course: course });
+  } catch (err) {
+      res.render("course", { message: "no results" });
   }
 });
 
 // GET /student/num
 app.get("/student/:num", async (req, res) => {
   try {
-    // get the user input parameter 'num'
-    const num = parseInt(req.params.num);
-    //check if it is a positive number
-    if (isNaN(num) || num < 1) {
-      res.json({ message: "Invalid student number" });
-    }
-    // get and show a specific student by id using our function getStudentByNum
-    const student = await cd.getStudentByNum(num);
-    res.json(student);
+      const num = parseInt(req.params.num);
+      if (isNaN(num) || num < 1) {
+          throw new Error('Invalid student number');
+      }
+      const student = await cd.getStudentByNum(num);
+      res.render("student", { student: student })
+      //res.json(student);
   } catch (err) {
-    res.status(500).json({ message: "no results " });
+      const student = {}
+      student.firstName = ''
+      student.lastName = ''
+      res.status(500).render("student", { student: student });
   }
 });
 
 // setup a 'route' to listen on the default url path
 // GET / 'home'
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "/views", "/home.html"));
+  res.render("home");
 });
 
 // GET /about
 app.get("/about", (req, res) => {
-  res.sendFile(path.join(__dirname, "/views", "/about.html"));
+  res.render("about");
 });
 
 // GET /htmlDemo
 app.get("/htmlDemo", (req, res) => {
-  res.sendFile(path.join(__dirname, "/views", "/htmlDemo.html"));
+  res.render("htmlDemo");
 });
 
 app.get("/students/add", (req, res) => {
-  res.sendFile(path.join(__dirname, "/views", "/addStudent.html"));
+  res.render("addStudent");
 });
 
 // Post route for adding a student
@@ -118,6 +171,16 @@ app.post("/students/add", function (req, res) {
       console.log(error);
       res.send("Error adding student");
     });
+});
+
+//Post route for updating a student
+app.post("/student/update", async (req, res) => {
+  const updStudent = req.body;
+  await cd.updateStudent(updStudent).then(() => res.redirect("/students"))
+      .catch(error => {
+          console.error(error);
+          res.status(500).send("Failed");
+      });
 });
 
 // 'No matching route' if user input wrong URL path we send him a  status 404 'Page Not Found' message
